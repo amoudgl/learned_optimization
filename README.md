@@ -1,3 +1,32 @@
+# Update
+
+This is a bumped up fork of `learned_optimization` library which works with latest jax and python 3.10.
+
+Install commands (tested on RTX 8000 with cuda 12.8):
+```bash
+# create new conda env
+conda create -n glo python=3.10
+
+# install pip packages
+pip install -U "jax[cuda12]"
+pip install dm-haiku==0.0.14
+pip install optax==0.2.9
+pip install tqdm==4.67.1
+pip install oryx==0.2.9
+pip install absl-py==2.2.2
+pip install --no-cache-dir tensorflow[and-cuda]
+pip install flax==0.10.6
+pip install tensorflow-datasets==4.9.8
+pip install gin-config==0.5.0
+pip install pandas==2.2.3
+pip install seqio==0.0.19
+pip install git+https://github.com/amoudgl/learned_optimization.git
+```
+
+Original package README below:
+
+---
+
 # learned\_optimization: Meta-learning optimizers and more with JAX
 
 [![Documentation Status](https://readthedocs.org/projects/learned-optimization/badge/?version=latest)](https://learned-optimization.readthedocs.io/en/latest/?badge=latest)
