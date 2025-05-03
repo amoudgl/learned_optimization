@@ -8,6 +8,7 @@ Install commands (tested on RTX 8000 with cuda 12.8):
 conda create -n glo python=3.10
 
 # install pip packages
+pip install nvidia-cudnn-cu12==9.8.0.87
 pip install -U "jax[cuda12]"
 pip install dm-haiku==0.0.14
 pip install optax==0.2.9
