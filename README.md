@@ -5,10 +5,9 @@ This is a bumped up fork of `learned_optimization` library which works with late
 Install commands (tested on RTX 8000 with cuda 12.8):
 ```bash
 # create new conda env
-conda create -n glo python=3.10
+conda create -n glo python=3.11
 
 # install pip packages
-pip install nvidia-cudnn-cu12==9.8.0.87
 pip install -U "jax[cuda12]"
 pip install dm-haiku==0.0.14
 pip install optax==0.2.9
@@ -22,6 +21,7 @@ pip install gin-config==0.5.0
 pip install pandas==2.2.3
 pip install seqio==0.0.19
 pip install git+https://github.com/amoudgl/learned_optimization.git
+pip install nvidia-cudnn-cu12==9.8.0.87
 ```
 
 Original package README below:
