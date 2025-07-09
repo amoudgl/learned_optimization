@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Summary libray for getting values out of complex jax graphs."""
+"""Summary library for getting values out of complex jax graphs."""
 import collections
 import contextlib
 import enum
@@ -29,7 +29,7 @@ import jax
 import jax.numpy as jnp
 from learned_optimization import profile
 import numpy as onp
-import tensorflow.compat.v2 as tf
+import wandb
 
 
 # Oryx can be a bit tricky to install. Turning off summaries
@@ -39,12 +39,9 @@ try:
   ORYX_LOGGING = True
 except (ImportError, AttributeError):
   logging.error("Oryx not found! This library will still work but no summary"
-                "will be logged.")
+                " will be logged.")
   ORYX_LOGGING = False
 
-# Right now we make use of flax's metrics which uses tensorflow for summary
-# writing. This requires TF2.0 eager style execution.
-tf.enable_v2_behavior()
 
 F = TypeVar("F", bound=Callable)
 G = TypeVar("G", bound=Callable)
@@ -463,96 +460,27 @@ class MultiWriter(SummaryWriterBase):
     _ = [w.histogram(name, value, step) for w in self.writers]
 
 
-class _SummaryState(threading.local):
+class WandbWriter(SummaryWriterBase):
+    """Summary writer which logs values to Weights & Biases (wandb)."""
 
-  def __init__(self):
-    super().__init__()
-    self.is_default = False
+    def __init__(self, logdir=None, project=None, entity=None, config=None, **kwargs):
+        # only initialize wandb once
+        if not wandb.run:
+            wandb.init(project=project, entity=entity, config=config, dir=logdir, **kwargs)
 
+    def scalar(self, name, value, step):
+        wandb.log({name: float(onp.array(value))}, step=int(onp.array(step)))
 
-_thread_state = _SummaryState()
+    def histogram(self, name, value, step):
+        value = onp.array(value).flatten()
+        wandb.log({name: wandb.Histogram(value)}, step=int(onp.array(step)))
 
+    def tensor(self, name, value, step):
+        value = onp.array(value)
+        wandb.log({name: wandb.Histogram(value.flatten())}, step=int(onp.array(step)))
 
-class TensorboardWriter(SummaryWriterBase):
-  """Saves data in event and summary protos for tensorboard."""
-
-  def __init__(self, log_dir):
-    """Create a new SummaryWriter.
-
-    Args:
-      log_dir: path to record tfevents files in.
-    """
-    log_dir = os.fspath(log_dir)
-
-    # If needed, create log_dir directory as well as missing parent directories.
-    if not tf.io.gfile.isdir(log_dir):
-      tf.io.gfile.makedirs(log_dir)
-
-    self._event_writer = tf.summary.create_file_writer(log_dir, 100, 60, None)
-    self._event_writer.set_as_default()
-    self._closed = False
-
-  def close(self):
-    """Close SummaryWriter. Final!"""
-    if not self._closed:
-      self._event_writer.close()
-      self._closed = True
-      del self._event_writer
-
-  def _ensure_default(self):
-    if not _thread_state.is_default:
-      self._event_writer.set_as_default()
-      _thread_state.is_default = True
-
-  def flush(self):
-    self._event_writer.flush()
-
-  def scalar(self, name, value, step):
-    """Saves scalar value.
-
-    Args:
-      name: str: label for this data
-      value: int/float: number to log
-      step: int: training step
-    """
-    value = float(onp.array(value))
-    self._ensure_default()
-    tf.summary.scalar(name=name, data=value, step=step)
-
-  def histogram(self, name, value, step, bins=None):
-    """Saves histogram of values.
-
-    Args:
-      name: str: label for this data
-      value: ndarray: will be flattened by this routine
-      step: int: training step
-      bins: number of bins in histogram
-    """
-    value = onp.array(value)
-    value = onp.reshape(value, -1)
-    self._ensure_default()
-    tf.summary.histogram(name=name, data=value, step=step, buckets=bins)
-
-  def text(self, name, textdata, step):
-    """Saves a text summary.
-
-    Args:
-      name: str: label for this data
-      textdata: string
-      step: int: training step
-    Note: markdown formatting is rendered by tensorboard.
-    """
-    if not isinstance(textdata, (str, bytes)):
-      raise ValueError("`textdata` should be of the type `str` or `bytes`.")
-    self._ensure_default()
-
-    tf.summary.text(name=name, data=tf.constant(textdata), step=step)
-
-  def tensor(self, name, value, step):
-    """Write a tensor summary."""
-    self._ensure_default()
-    tf.summary.write(tag=name, tensor=value, step=step, name=name)
+    def flush(self):
+        pass
 
 
-JaxboardWriter = TensorboardWriter
-
+JaxboardWriter = WandbWriter
