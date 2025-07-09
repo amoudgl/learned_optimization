@@ -1,6 +1,6 @@
 # Update
 
-This is a bumped up fork of `learned_optimization` library which works with latest jax and python 3.10.
+This is a bumped up fork of `learned_optimization` library which works with latest jax and python 3.11. Also uses wandb in [summary writer](learned_optimization/summary.py) for logging instead of tensorboard.
 
 Install commands (tested on RTX 8000 with cuda 12.8):
 ```bash
@@ -12,7 +12,6 @@ pip install -U "jax[cuda12]"
 pip install dm-haiku==0.0.14
 pip install optax==0.2.9
 pip install tqdm==4.67.1
-pip install oryx==0.2.9
 pip install absl-py==2.2.2
 pip install --no-cache-dir tensorflow[and-cuda]
 pip install flax==0.10.6
@@ -22,7 +21,17 @@ pip install pandas==2.2.3
 pip install seqio==0.0.19
 pip install git+https://github.com/amoudgl/learned_optimization.git
 pip install nvidia-cudnn-cu12==9.8.0.87
+pip install tensorflow-probability==0.24.0
+pip install tf-keras==2.19.0
+pip install wandb==0.21.0
 ```
+
+To enable logging of intermediate values in jit functions, install `oryx` from a latest git commit since its pip version (v0.2.9) was last updated in Dec 2024 and hence is not compatible with jax at the time of writing (v0.6.2, July 2025):
+```
+pip install git+https://github.com/jax-ml/oryx.git@2619298bbda423ffb0923d69acaeb1cccd7d7e44
+```
+
+The code runs even if you don't install oryx except that intermediate values will not logged by the summary writer.
 
 Original package README below:
 
